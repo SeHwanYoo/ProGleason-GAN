@@ -1,2 +1,2 @@
 # ProGleason-GAN
-conditional progressive growing GAN approach for prostatic cancer Gleason Grade patch synthesis
+code for publication "ProGleason-GAN: Conditional Progressive Growing GAN for prostatic cancer Gleason Grade patch synthesis"
