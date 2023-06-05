@@ -29,4 +29,7 @@ To initiate the training, the following parameters must be set in the config.py 
 |    --NUM_WORKERS|     The number of parallel workers for data loading during training         |
 
 
-After that, you only need to call `python train.py'
+After that, you only need to call
+```
+$ python train.py
+``` 
