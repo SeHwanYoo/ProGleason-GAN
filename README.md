@@ -1,4 +1,4 @@
-#INFORMATION
+# INFORMATION
 
 This is the code implementation for: "ProGleason-GAN: Conditional Progressive Growing: GAN for prostatic cancer Gleason Grade patch synthesis"
 
