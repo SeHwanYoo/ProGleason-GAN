@@ -93,9 +93,11 @@ def get_loader(image_size):
         ]
     )
     batch_size = config.BATCH_SIZES[int(log2(image_size / 4))]
-    dataset = SiCAPv2(csv_file=config.PATH_CSV_SICAP,
-                      root_dir=config.PATH_IMAGES_SICAP)
-    dataset.change_transform(transform)
+    dataset = SiCAPv2(
+        transform = transform, 
+        # shape=(image_size, image_size)
+        )
+    # dataset.change_transform(transform)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=config.NUM_WORKERS, pin_memory=True)
     return loader, dataset
 

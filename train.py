@@ -15,7 +15,12 @@ from tqdm import tqdm
 import config as config
 from torch.autograd import Variable
 import os
+import numpy as np
 
+import matplotlib.pyplot as plt
+
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+os.environ['TORCH_USE_CUDA_DSA'] = '1'
 
 torch.backends.cudnn.benchmarks = True
 
@@ -31,6 +36,8 @@ def train_fn(
         opt_gen,
         scaler_gen,
         scaler_critic,
+        epoch=10, 
+        idx_num_epochs=0
             ):
     loop = tqdm(loader, leave=True)
     cuda = True if torch.cuda.is_available() else False
@@ -81,12 +88,41 @@ def train_fn(
         alpha = min(alpha, 1)
         loop.set_description(f"[Loss Critic: {loss_critic.item():.4f}, Loss Generator : {loss_gen.item():.4f}] -- PROGRESION BATCH:")
         loop.update(1)
+    
+    
+    if epoch % 50 == 0:
+    # if True:
+        gen.eval() 
+        
+        noise = torch.randn(config.N_CLASSES, config.Z_DIM, 1, 1).to(config.DEVICE)
+        
+        LongTensor = torch.cuda.LongTensor if cuda else torch.LongTensor
+        labels = torch.Tensor([0, 1, 2, 3, 4, 5])
+        labels = Variable(labels.type(LongTensor))
+        
+        eval_fake = gen(noise, labels, alpha, step)
+        # print('------------------------>', fake.shape)
+        # print('------------------------>', type(fake))
+        
+        fake_images = eval_fake.detach().cpu() 
+        fake_images = fake_images.permute(0, 2, 3, 1)
+        fake_images = np.clip(fake_images, 0, 1)
+
+        # idx = 0 
+        for cls in range(config.N_CLASSES): 
+            plt.subplot(1, config.N_CLASSES, cls+1)
+            plt.imshow(fake_images[cls])
+            plt.title(f'Class: {(str(cls))}')
+            
+        plt.savefig(os.path.join(config.RESULTS_DIR, f'STEP_{str(idx_num_epochs)}_EPOCH_{str(epoch)}_{str(np.random.randint(0, 1000))}'))
+        
+        
     return  alpha
 
 
 def main():
-    gen = Generator(config.Z_DIM, n_classes=4,in_channels=config.IN_CHANNELS, img_channels=config.CHANNELS_IMG).to(config.DEVICE)
-    critic = Discriminator(config.IN_CHANNELS, n_classes=4,img_channels=config.CHANNELS_IMG
+    gen = Generator(config.Z_DIM, n_classes=config.N_CLASSES,in_channels=config.IN_CHANNELS, img_channels=config.CHANNELS_IMG).to(config.DEVICE)
+    critic = Discriminator(config.IN_CHANNELS, n_classes=config.N_CLASSES,img_channels=config.CHANNELS_IMG
                            ).to(config.DEVICE)
 
     # initialize optimizers and scalers for FP16 training
@@ -106,14 +142,11 @@ def main():
             config.CHECKPOINT_CRITIC, critic, opt_critic, config.LEARNING_RATE_DISCRIMINATOR,
         )
 
-    gen.train()
-    critic.train()
-
 
     dataset_loaded=0
     # start at step that corresponds to img size that we set in config
     step = int(log2(config.START_TRAIN_AT_IMG_SIZE / 4))
-
+    idx_num_epochs = 0
     for num_epochs in config.PROGRESSIVE_EPOCHS[step:]:
         alpha = 1e-5  # start with very low alpha
         if(dataset_loaded==0):
@@ -126,6 +159,11 @@ def main():
 
         for epoch in range(num_epochs):
             print(f"Epoch [{epoch + 1}/{num_epochs}]")
+            
+            # moving, becuase inside of train funciton, eval mode 
+            gen.train()
+            critic.train()
+            
             alpha = train_fn(
                 critic,
                 gen,
@@ -137,6 +175,8 @@ def main():
                 opt_gen,
                 scaler_gen,
                 scaler_critic,
+                epoch=epoch, # add
+                idx_num_epochs = idx_num_epochs, # add
             )
 
         if config.SAVE_MODEL:
