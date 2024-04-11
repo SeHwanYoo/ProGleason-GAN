@@ -19,6 +19,21 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+
+import wandb
+
+wandb.init(
+    project="prostate_gan", 
+    
+    # config={
+    # "learning_rate": 0.02,
+    # "architecture": "CNN",
+    # "dataset": "CIFAR-100",
+    # "epochs": 10,
+    # }
+    )
+
+
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 os.environ['TORCH_USE_CUDA_DSA'] = '1'
 
@@ -88,6 +103,9 @@ def train_fn(
         alpha = min(alpha, 1)
         loop.set_description(f"[Loss Critic: {loss_critic.item():.4f}, Loss Generator : {loss_gen.item():.4f}] -- PROGRESION BATCH:")
         loop.update(1)
+        
+        wandb.log({"Loss Critic": loss_critic.item(), "Loss Generator": loss_gen.item()})
+
     
     
     if epoch % 50 == 0:
@@ -115,6 +133,8 @@ def train_fn(
             plt.title(f'Class: {(str(cls))}')
             
         plt.savefig(os.path.join(config.RESULTS_DIR, f'STEP_{str(idx_num_epochs)}_EPOCH_{str(epoch)}_{str(np.random.randint(0, 1000))}'))
+        wandb.log({"Log generator images": wandb.Image(os.path.join(config.RESULTS_DIR, f'STEP_{str(idx_num_epochs)}_EPOCH_{str(epoch)}_{str(np.random.randint(0, 1000))}'))})
+
         
         
     return  alpha

@@ -6,7 +6,9 @@ CHECKPOINT_CRITIC = "Models_saved/discriminator_4.pth"
 RESULTS_DIR="Models_saved"
 PATH_CSV_SICAP='\SICAPv2\partition\Test\Train.xlsx'
 # PATH_IMAGES_SICAP='\SICAPv2\images'
-PATH_IMAGES_SICAP='/home/yoos-bii/Desktop/data_tct/prostate_output'
+# PATH_IMAGES_SICAP='/home/yoos-bii/Desktop/data_tct/prostate_output'
+PATH_IMAGES_SICAP='/tsclient/_home_yoos-bii/Desktop/data_tct/prostate_output'
+
 cuda = True if torch.cuda.is_available() else False
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 SAVE_MODEL = True
